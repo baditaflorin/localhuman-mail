@@ -27,4 +27,3 @@ export function Toast({ toast }: Props) {
     </div>
   );
 }
-

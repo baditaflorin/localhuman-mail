@@ -4,7 +4,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 
-const packageJson = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as {
+const packageJson = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf8")
+) as {
   version: string;
 };
 

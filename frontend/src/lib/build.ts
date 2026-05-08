@@ -3,4 +3,3 @@ export const buildInfo = {
   commit: __APP_COMMIT__,
   buildTime: __APP_BUILD_TIME__
 };
-

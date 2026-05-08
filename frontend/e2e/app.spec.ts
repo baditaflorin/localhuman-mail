@@ -14,8 +14,7 @@ test("renders the mailbox workbench and local project links", async ({ page }) =
   );
 
   await page.getByLabel("Search messages").fill("launch");
-  await expect(page.getByText("Thursday launch checklist")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Thursday launch checklist" })).toBeVisible();
   await page.getByRole("button", { name: "Draft" }).click();
   await expect(page.getByLabel("Generated reply draft")).toBeVisible();
 });
-

@@ -22,4 +22,3 @@ try {
 }
 
 writeFileSync(resolve(docs, "build-meta.json"), JSON.stringify(marker, null, 2));
-

@@ -69,4 +69,3 @@ export function fallbackDraft(message: Message, tone: string) {
 
   return `${opener}\n\nI reviewed "${message.subject}" and will send the focused version with the decision points, risks, and next action separated. I will keep it tight and flag anything that needs approval.\n\nBest,\n`;
 }
-

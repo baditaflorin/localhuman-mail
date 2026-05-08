@@ -27,4 +27,3 @@ export function relativeAge(value: string) {
   const days = Math.round(hours / 24);
   return `${days}d ago`;
 }
-

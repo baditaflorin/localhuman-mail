@@ -18,6 +18,7 @@ import { createApiClient, errorMessage, type AssistTone, type Message } from "@/
 import { Toast, type ToastState } from "@/components/Toast";
 import { demoMessages, fallbackDraft, filterMessages } from "@/features/mail/demo";
 import { buildInfo } from "@/lib/build";
+import { fetchLatestRepoCommit } from "@/lib/github";
 import { useLocalStorageState } from "@/lib/storage";
 import { formatMailDate, relativeAge } from "@/lib/time";
 
@@ -61,6 +62,13 @@ export function App() {
     retry: false
   });
 
+  const latestCommitQuery = useQuery({
+    queryKey: ["github-latest-commit"],
+    queryFn: fetchLatestRepoCommit,
+    retry: false,
+    staleTime: 60_000
+  });
+
   const messagesQuery = useQuery({
     queryKey: ["messages", backendUrl],
     queryFn: async () => {
@@ -93,7 +101,10 @@ export function App() {
       await queryClient.invalidateQueries({ queryKey: ["messages", backendUrl] });
     },
     onError: (error) => {
-      setToast({ kind: "error", message: errorMessage(error, "Start the backend to import demo mail") });
+      setToast({
+        kind: "error",
+        message: errorMessage(error, "Start the backend to import demo mail")
+      });
     }
   });
 
@@ -203,7 +214,8 @@ export function App() {
               Local boundary
             </div>
             <p className="text-sm leading-6 text-steel">
-              Mailbox data stays in the backend runtime store; this Pages app stores only UI settings.
+              Mailbox data stays in the backend runtime store; this Pages app stores only UI
+              settings.
             </p>
           </div>
 
@@ -212,6 +224,21 @@ export function App() {
             <dd className="font-mono text-ink">v{buildInfo.version}</dd>
             <dt>Commit</dt>
             <dd className="font-mono text-ink">{buildInfo.commit}</dd>
+            {latestCommitQuery.data ? (
+              <>
+                <dt>Latest</dt>
+                <dd>
+                  <a
+                    className="font-mono text-ink underline decoration-line underline-offset-4 hover:text-fern"
+                    href={latestCommitQuery.data.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {latestCommitQuery.data.sha}
+                  </a>
+                </dd>
+              </>
+            ) : null}
             {versionQuery.data ? (
               <>
                 <dt>API</dt>
@@ -290,10 +317,14 @@ export function App() {
                 >
                   <span className="flex items-center justify-between gap-3">
                     <span className="truncate text-sm font-semibold">{message.from}</span>
-                    <span className="shrink-0 text-xs text-steel">{formatMailDate(message.date)}</span>
+                    <span className="shrink-0 text-xs text-steel">
+                      {formatMailDate(message.date)}
+                    </span>
                   </span>
                   <span className="truncate text-sm font-semibold">{message.subject}</span>
-                  <span className="line-clamp-2 text-sm leading-6 text-steel">{message.snippet}</span>
+                  <span className="line-clamp-2 text-sm leading-6 text-steel">
+                    {message.snippet}
+                  </span>
                   <span className="flex flex-wrap gap-1.5">
                     {message.tags.map((tag) => (
                       <span
@@ -356,7 +387,9 @@ export function App() {
                       key={item}
                       type="button"
                       className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold capitalize ${
-                        tone === item ? "border-fern bg-emerald-50 text-fern" : "border-line bg-white"
+                        tone === item
+                          ? "border-fern bg-emerald-50 text-fern"
+                          : "border-line bg-white"
                       }`}
                       onClick={() => setTone(item)}
                     >
@@ -393,11 +426,13 @@ export function App() {
       </div>
       <Toast toast={toast} />
       <div className="sr-only" aria-live="polite">
-        {versionQuery.isFetching || messagesQuery.isFetching || capabilitiesQuery.isFetching
+        {versionQuery.isFetching ||
+        messagesQuery.isFetching ||
+        capabilitiesQuery.isFetching ||
+        latestCommitQuery.isFetching
           ? "Refreshing"
           : "Idle"}
       </div>
     </main>
   );
 }
-

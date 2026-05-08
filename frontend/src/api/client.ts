@@ -26,4 +26,3 @@ export function errorMessage(error: unknown, fallback: string) {
   }
   return fallback;
 }
-

@@ -12,4 +12,3 @@ for (const item of [
 ]) {
   rmSync(resolve(docs, item), { force: true, recursive: true });
 }
-

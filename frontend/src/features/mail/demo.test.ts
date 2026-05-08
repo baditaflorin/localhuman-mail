@@ -15,4 +15,3 @@ describe("mail demo helpers", () => {
     expect(draft).toContain(demoMessages[0].subject);
   });
 });
-

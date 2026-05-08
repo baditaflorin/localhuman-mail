@@ -14,4 +14,3 @@ export function useLocalStorageState(key: string, initialValue: string) {
 
   return [value, setValue] as const;
 }
-
