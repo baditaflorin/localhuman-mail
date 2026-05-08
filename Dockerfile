@@ -1,4 +1,4 @@
-FROM golang:1.26-alpine AS builder
+FROM golang:1.26.3-alpine AS builder
 
 RUN apk add --no-cache ca-certificates git
 WORKDIR /src
@@ -39,4 +39,3 @@ VOLUME ["/data"]
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD ["/localhuman-mail", "-healthcheck"]
 ENTRYPOINT ["/localhuman-mail"]
-

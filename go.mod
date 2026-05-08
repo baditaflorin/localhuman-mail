@@ -1,6 +1,6 @@
 module github.com/baditaflorin/localhuman-mail
 
-go 1.26.0
+go 1.26.3
 
 require (
 	github.com/emersion/go-message v0.18.2
