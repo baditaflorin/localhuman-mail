@@ -1,5 +1,4 @@
 import react from "@vitejs/plugin-react";
-import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
@@ -9,14 +8,6 @@ const packageJson = JSON.parse(
 ) as {
   version: string;
 };
-
-function gitValue(command: string, fallback: string) {
-  try {
-    return execSync(command, { encoding: "utf8" }).trim();
-  } catch {
-    return fallback;
-  }
-}
 
 export default defineConfig({
   base: "/localhuman-mail/",
@@ -35,8 +26,8 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
-    __APP_COMMIT__: JSON.stringify(gitValue("git rev-parse --short=12 HEAD", "dev")),
-    __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString())
+    __APP_COMMIT__: JSON.stringify(process.env.LOCALHUMAN_BUILD_COMMIT ?? "pages"),
+    __APP_BUILD_TIME__: JSON.stringify(process.env.LOCALHUMAN_BUILD_TIME ?? "static")
   },
   resolve: {
     alias: {

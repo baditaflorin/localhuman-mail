@@ -222,7 +222,7 @@ export function App() {
           <dl className="mt-7 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-xs text-steel">
             <dt>UI</dt>
             <dd className="font-mono text-ink">v{buildInfo.version}</dd>
-            <dt>Commit</dt>
+            <dt>Build</dt>
             <dd className="font-mono text-ink">{buildInfo.commit}</dd>
             {latestCommitQuery.data ? (
               <>

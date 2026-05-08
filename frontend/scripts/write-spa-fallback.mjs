@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const docs = resolve(import.meta.dirname, "../../docs");
@@ -11,14 +11,8 @@ if (existsSync(indexPath)) {
 
 const marker = {
   version: process.env.npm_package_version ?? "0.1.0",
-  commit: "unknown",
-  buildTime: new Date().toISOString()
+  commit: process.env.LOCALHUMAN_BUILD_COMMIT ?? "pages",
+  buildTime: process.env.LOCALHUMAN_BUILD_TIME ?? "static"
 };
-
-try {
-  marker.commit = readFileSync(resolve(import.meta.dirname, "../../.git/HEAD"), "utf8").trim();
-} catch {
-  marker.commit = "unknown";
-}
 
 writeFileSync(resolve(docs, "build-meta.json"), JSON.stringify(marker, null, 2));
