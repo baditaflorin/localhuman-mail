@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-label="localhuman-mail app screenshot">
+  <rect width="1200" height="720" fill="#f8fafc"/>
+  <rect x="40" y="36" width="1120" height="648" rx="14" fill="#ffffff" stroke="#d9dee7"/>
+  <rect x="40" y="36" width="250" height="648" fill="#ffffff"/>
+  <rect x="290" y="36" width="350" height="648" fill="#ffffff" stroke="#d9dee7"/>
+  <rect x="640" y="36" width="520" height="648" fill="#ffffff"/>
+  <rect x="70" y="70" width="44" height="44" rx="9" fill="#172033"/>
+  <path d="M80 84h24v18H80z" fill="#f8fafc"/>
+  <path d="m80 84 12 9 12-9" fill="none" stroke="#276749" stroke-width="3" stroke-linecap="round"/>
+  <text x="126" y="88" fill="#172033" font-family="Arial, sans-serif" font-size="21" font-weight="700">localhuman-mail</text>
+  <text x="126" y="108" fill="#53637a" font-family="Arial, sans-serif" font-size="11" letter-spacing="2">PRIVATE INBOX AI</text>
+  <rect x="70" y="150" width="188" height="38" rx="8" fill="#f8fafc" stroke="#d9dee7"/>
+  <circle cx="86" cy="169" r="5" fill="#276749"/>
+  <text x="100" y="174" fill="#172033" font-family="Arial, sans-serif" font-size="14">Connected</text>
+  <rect x="70" y="216" width="78" height="34" rx="8" fill="#ffffff" stroke="#d9dee7"/>
+  <text x="96" y="238" fill="#172033" font-family="Arial, sans-serif" font-size="14" font-weight="700">Star</text>
+  <rect x="158" y="216" width="100" height="34" rx="8" fill="#ffffff" stroke="#d9dee7"/>
+  <text x="184" y="238" fill="#172033" font-family="Arial, sans-serif" font-size="14" font-weight="700">PayPal</text>
+  <rect x="315" y="68" width="300" height="42" rx="8" fill="#f8fafc" stroke="#d9dee7"/>
+  <text x="342" y="95" fill="#53637a" font-family="Arial, sans-serif" font-size="14">Search mail</text>
+  <rect x="315" y="132" width="300" height="124" fill="#ecfdf5"/>
+  <text x="335" y="160" fill="#172033" font-family="Arial, sans-serif" font-size="15" font-weight="700">maya@northstar.example</text>
+  <text x="335" y="190" fill="#172033" font-family="Arial, sans-serif" font-size="16" font-weight="700">Re: Contract redlines</text>
+  <text x="335" y="220" fill="#53637a" font-family="Arial, sans-serif" font-size="14">Can you send the condensed version...</text>
+  <line x1="315" y1="256" x2="615" y2="256" stroke="#d9dee7"/>
+  <text x="335" y="298" fill="#172033" font-family="Arial, sans-serif" font-size="16" font-weight="700">Thursday launch checklist</text>
+  <text x="335" y="326" fill="#53637a" font-family="Arial, sans-serif" font-size="14">DNS cutover and fallback status page...</text>
+  <text x="675" y="92" fill="#53637a" font-family="Arial, sans-serif" font-size="14">18m ago</text>
+  <text x="675" y="132" fill="#172033" font-family="Arial, sans-serif" font-size="30" font-weight="700">Re: Contract redlines before the investor call</text>
+  <text x="675" y="178" fill="#53637a" font-family="Arial, sans-serif" font-size="15">From Maya North &lt;maya@northstar.example&gt;</text>
+  <rect x="675" y="232" width="420" height="170" rx="10" fill="#f8fafc" stroke="#d9dee7"/>
+  <text x="700" y="270" fill="#172033" font-family="Arial, sans-serif" font-size="17">Can you send the condensed version with only</text>
+  <text x="700" y="302" fill="#172033" font-family="Arial, sans-serif" font-size="17">the liability deltas highlighted?</text>
+  <rect x="675" y="468" width="82" height="36" rx="8" fill="#ecfdf5" stroke="#276749"/>
+  <text x="699" y="491" fill="#276749" font-family="Arial, sans-serif" font-size="14" font-weight="700">concise</text>
+  <rect x="950" y="468" width="90" height="36" rx="8" fill="#276749"/>
+  <text x="981" y="491" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="700">Draft</text>
+  <rect x="675" y="524" width="420" height="92" rx="10" fill="#ffffff" stroke="#d9dee7"/>
+  <text x="700" y="560" fill="#53637a" font-family="Arial, sans-serif" font-size="15">Generated local reply draft...</text>
+</svg>
+
