@@ -1,0 +1,83 @@
+services:
+  app:
+    image: ghcr.io/baditaflorin/localhuman-mail:latest
+    restart: unless-stopped
+    environment:
+      LOCALHUMAN_ADDR: ":8080"
+      LOCALHUMAN_DATA_DIR: "/data"
+      LOCALHUMAN_ALLOWED_ORIGINS: "https://baditaflorin.github.io,http://localhost:5173,http://127.0.0.1:5173"
+      LOCALHUMAN_LOG_LEVEL: "info"
+      LOCALHUMAN_OLLAMA_URL: "${LOCALHUMAN_OLLAMA_URL:-http://host.docker.internal:11434}"
+      LOCALHUMAN_LLM_MODEL: "${LOCALHUMAN_LLM_MODEL:-llama3.2}"
+      LOCALHUMAN_EMBEDDING_MODEL: "${LOCALHUMAN_EMBEDDING_MODEL:-nomic-embed-text}"
+      LOCALHUMAN_AGE_RECIPIENT: "${LOCALHUMAN_AGE_RECIPIENT:-}"
+    volumes:
+      - localhuman-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: [ "CMD", "/localhuman-mail", "-healthcheck" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1536M
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "25342:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - internal
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  prometheus:
+    image: prom/prometheus:v3.0.1
+    profiles: [ "metrics" ]
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  localhuman-data:
+  prometheus-data:
+

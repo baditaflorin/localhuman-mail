@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"log/slog"
 	"net/http"
 	"os"
@@ -24,6 +25,13 @@ var (
 )
 
 func main() {
+	healthcheck := flag.Bool("healthcheck", false, "check the local HTTP health endpoint")
+	flag.Parse()
+	if *healthcheck {
+		runHealthcheck()
+		return
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -79,5 +87,17 @@ func main() {
 	defer cancel()
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		logger.Error("server shutdown", "error", err)
+	}
+}
+
+func runHealthcheck() {
+	client := http.Client{Timeout: 2 * time.Second}
+	response, err := client.Get("http://127.0.0.1:8080/healthz")
+	if err != nil {
+		os.Exit(1)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		os.Exit(1)
 	}
 }

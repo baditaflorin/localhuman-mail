@@ -1,0 +1,35 @@
+{
+  "title": "localhuman-mail",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP requests",
+      "targets": [
+        {
+          "expr": "sum(rate(localhuman_http_requests_total[5m])) by (route, status)"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Imported messages",
+      "targets": [
+        {
+          "expr": "increase(localhuman_messages_imported_total[1h])"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Searches",
+      "targets": [
+        {
+          "expr": "increase(localhuman_search_requests_total[1h])"
+        }
+      ]
+    }
+  ]
+}
+
