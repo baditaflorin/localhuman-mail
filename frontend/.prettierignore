@@ -1,0 +1,7 @@
+node_modules
+dist
+../docs/assets
+src/api/schema.d.ts
+test-results
+playwright-report
+
