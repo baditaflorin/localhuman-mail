@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/baditaflorin/localhuman-mail/internal/mailbox"
+
+	// Register the pure-Go SQLite driver for database/sql.
 	_ "modernc.org/sqlite"
 )
 

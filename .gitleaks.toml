@@ -1,0 +1,11 @@
+title = "localhuman-mail gitleaks config"
+
+[allowlist]
+description = "Allow placeholders and documentation-only examples."
+regexes = [
+  '''your-domain\.example''',
+  '''you@localhuman\.dev''',
+  '''example\.com''',
+  '''example'''
+]
+
