@@ -18,7 +18,7 @@ mkdir -p "$DATA_DIR" "$ROOT/tmp"
 
 LOCALHUMAN_ADDR="127.0.0.1:$PORT" \
 LOCALHUMAN_DATA_DIR="$DATA_DIR" \
-LOCALHUMAN_ALLOWED_ORIGINS="http://127.0.0.1:4173,http://localhost:4173,https://baditaflorin.github.io" \
+LOCALHUMAN_ALLOWED_ORIGINS="http://127.0.0.1:4187,http://localhost:4187,https://baditaflorin.github.io" \
 LOCALHUMAN_OLLAMA_URL="" \
 "$ROOT/bin/localhuman-mail" >"$LOG_FILE" 2>&1 &
 SERVER_PID=$!
