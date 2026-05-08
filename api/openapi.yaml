@@ -1,0 +1,335 @@
+openapi: 3.1.0
+info:
+  title: localhuman-mail API
+  version: 0.1.0
+  description: Local-first mailbox import, search, and AI assist API.
+servers:
+  - url: http://localhost:8080
+paths:
+  /healthz:
+    get:
+      operationId: getHealthz
+      responses:
+        "200":
+          description: Health response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /readyz:
+    get:
+      operationId: getReadyz
+      responses:
+        "200":
+          description: Readiness response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Backend is not ready.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/version:
+    get:
+      operationId: getVersion
+      responses:
+        "200":
+          description: Version metadata.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionResponse"
+  /api/v1/capabilities:
+    get:
+      operationId: getCapabilities
+      responses:
+        "200":
+          description: Runtime capability status.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapabilitiesResponse"
+  /api/v1/messages:
+    get:
+      operationId: listMessages
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Message list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageListResponse"
+  /api/v1/messages/{id}:
+    get:
+      operationId: getMessage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Full message.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "404":
+          description: Message not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/search:
+    get:
+      operationId: searchMessages
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 25
+      responses:
+        "200":
+          description: Search response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+  /api/v1/import/demo:
+    post:
+      operationId: importDemo
+      responses:
+        "200":
+          description: Demo import response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResponse"
+  /api/v1/import/eml:
+    post:
+      operationId: importEml
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: EML import response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResponse"
+        "400":
+          description: Invalid upload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/assist/reply:
+    post:
+      operationId: assistReply
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssistReplyRequest"
+      responses:
+        "200":
+          description: Reply assist result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistReplyResponse"
+        "404":
+          description: Message not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+        detail:
+          type: string
+    VersionResponse:
+      type: object
+      required:
+        - version
+        - commit
+        - buildTime
+      properties:
+        version:
+          type: string
+        commit:
+          type: string
+        buildTime:
+          type: string
+    Capability:
+      type: object
+      required:
+        - name
+        - available
+        - detail
+      properties:
+        name:
+          type: string
+        available:
+          type: boolean
+        detail:
+          type: string
+    CapabilitiesResponse:
+      type: object
+      required:
+        - capabilities
+      properties:
+        capabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Capability"
+    Message:
+      type: object
+      required:
+        - id
+        - subject
+        - from
+        - to
+        - date
+        - snippet
+        - body
+        - tags
+      properties:
+        id:
+          type: string
+        subject:
+          type: string
+        from:
+          type: string
+        to:
+          type: array
+          items:
+            type: string
+        date:
+          type: string
+          format: date-time
+        snippet:
+          type: string
+        body:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    MessageListResponse:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+    SearchResponse:
+      type: object
+      required:
+        - query
+        - elapsedMs
+        - messages
+      properties:
+        query:
+          type: string
+        elapsedMs:
+          type: integer
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+    ImportResponse:
+      type: object
+      required:
+        - imported
+        - skipped
+        - total
+      properties:
+        imported:
+          type: integer
+        skipped:
+          type: integer
+        total:
+          type: integer
+    AssistReplyRequest:
+      type: object
+      required:
+        - messageId
+        - tone
+      properties:
+        messageId:
+          type: string
+        tone:
+          type: string
+          enum:
+            - concise
+            - warm
+            - decisive
+        instructions:
+          type: string
+          maxLength: 1200
+    AssistReplyResponse:
+      type: object
+      required:
+        - draft
+        - model
+        - source
+      properties:
+        draft:
+          type: string
+        model:
+          type: string
+        source:
+          type: string
+          enum:
+            - local_llm
+            - fallback
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+

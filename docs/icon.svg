@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="localhuman-mail icon">
+  <rect width="128" height="128" rx="24" fill="#172033"/>
+  <path d="M24 42h80v52H24z" fill="#f8fafc"/>
+  <path d="m24 42 40 30 40-30" fill="none" stroke="#276749" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="94" cy="34" r="13" fill="#f59e0b"/>
+</svg>
+

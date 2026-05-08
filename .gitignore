@@ -29,6 +29,7 @@ yarn-error.log*
 pnpm-debug.log*
 coverage/
 dist/
+*.tsbuildinfo
 
 # Go
 bin/
@@ -49,4 +50,3 @@ runtime/
 # Generated local reports
 playwright-report/
 test-results/
-

@@ -1,0 +1,19 @@
+{
+  "name": "localhuman-mail",
+  "short_name": "localhuman",
+  "description": "Privacy-first AI email client with local mailbox indexing, semantic search, and assistive drafting.",
+  "start_url": "/localhuman-mail/",
+  "scope": "/localhuman-mail/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "icons": [
+    {
+      "src": "/localhuman-mail/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
+
