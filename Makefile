@@ -8,6 +8,8 @@ BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 GO_PACKAGES := ./cmd/... ./internal/...
 GOTMP := $(CURDIR)/tmp/go-build
 GO_ENV := GOTMPDIR=$(GOTMP) CGO_ENABLED=0
+DOCKER_BUILDER ?=
+DOCKER_BUILDER_FLAG := $(if $(DOCKER_BUILDER),--builder $(DOCKER_BUILDER),)
 
 .PHONY: help install-hooks generate dev build data test test-integration smoke lint fmt pages-preview docker-build docker-push release compose-up compose-down clean hooks-pre-commit hooks-commit-msg hooks-pre-push hooks-post-merge
 
@@ -63,7 +65,7 @@ pages-preview: build ## Serve the Pages build locally
 	npm --prefix frontend run preview -- --port 4173
 
 docker-build: ## Build linux/amd64 backend image
-	docker buildx build --platform linux/amd64 \
+	docker buildx build $(DOCKER_BUILDER_FLAG) --platform linux/amd64 \
 		--build-arg VERSION=$(VERSION) \
 		--build-arg COMMIT=$(COMMIT) \
 		--build-arg BUILD_TIME=$(BUILD_TIME) \
@@ -73,7 +75,7 @@ docker-build: ## Build linux/amd64 backend image
 		--load .
 
 docker-push: ## Push backend image to GHCR
-	docker buildx build --platform linux/amd64 \
+	docker buildx build $(DOCKER_BUILDER_FLAG) --platform linux/amd64 \
 		--build-arg VERSION=$(VERSION) \
 		--build-arg COMMIT=$(COMMIT) \
 		--build-arg BUILD_TIME=$(BUILD_TIME) \
