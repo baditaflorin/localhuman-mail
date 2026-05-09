@@ -45,3 +45,20 @@ textarea:focus-visible {
   background: #bbf7d0;
   color: #172033;
 }
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  button,
+  input,
+  textarea,
+  a {
+    box-shadow: none;
+  }
+
+  pre {
+    white-space: pre-wrap;
+  }
+}

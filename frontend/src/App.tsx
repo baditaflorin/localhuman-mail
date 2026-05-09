@@ -3,46 +3,100 @@ import {
   Bot,
   Check,
   CircleDollarSign,
+  Clipboard,
+  Download,
   ExternalLink,
+  FileJson,
   Github,
   Inbox,
+  Link,
   MailPlus,
+  Paperclip,
+  Printer,
   RefreshCw,
   Search,
   Server,
+  ShieldAlert,
   ShieldCheck,
+  Trash2,
   Upload
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
-import { createApiClient, errorMessage, type AssistTone, type Message } from "@/api/client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  createApiClient,
+  errorMessage,
+  uploadEmlFile,
+  type AssistTone,
+  type Message
+} from "@/api/client";
 import { Toast, type ToastState } from "@/components/Toast";
 import { demoMessages, fallbackDraft, filterMessages } from "@/features/mail/demo";
+import {
+  createSnapshot,
+  decodeSnapshotHash,
+  defaultUIState,
+  encodeSnapshotHash,
+  fileLooksLikeEML,
+  fileResultId,
+  looksLikeEMLText,
+  maxShareUrlLength,
+  messageListToCSV,
+  messageListToJSON,
+  parseSnapshotText,
+  parseStoredUIState,
+  serializeUIState,
+  snapshotToJSON,
+  stateFileName,
+  summarizeBatch,
+  textToEmlFile,
+  type FileImportResult,
+  type UIState
+} from "@/features/mail/workbench";
+import { copyText, downloadTextFile, readClipboardText } from "@/lib/browser";
 import { buildInfo } from "@/lib/build";
 import { fetchLatestRepoCommit } from "@/lib/github";
-import { useLocalStorageState } from "@/lib/storage";
 import { formatMailDate, relativeAge } from "@/lib/time";
 
 const repoUrl = "https://github.com/baditaflorin/localhuman-mail";
 const paypalUrl = "https://www.paypal.com/paypalme/florinbadita";
 const defaultBackendUrl = import.meta.env.VITE_LOCALHUMAN_API_URL ?? "http://localhost:8080";
+const uiStateKey = "localhuman-mail.ui-state";
+const legacyBackendUrlKey = "localhuman-mail.backend-url";
+const toneOptions: AssistTone[] = ["concise", "warm", "decisive"];
 
 export function App() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [backendUrl, setBackendUrl] = useLocalStorageState(
-    "localhuman-mail.backend-url",
-    defaultBackendUrl
-  );
-  const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState(demoMessages[0]?.id ?? "");
-  const [tone, setTone] = useState<AssistTone>("concise");
-  const [draft, setDraft] = useState("");
+  const stateInputRef = useRef<HTMLInputElement | null>(null);
+  const [uiState, setUIState] = useState<UIState>(() => initialUIState());
   const [toast, setToast] = useState<ToastState>(null);
+  const [importResults, setImportResults] = useState<FileImportResult[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
-  const api = useMemo(() => createApiClient(backendUrl), [backendUrl]);
+  const api = useMemo(() => createApiClient(uiState.backendUrl), [uiState.backendUrl]);
+
+  useEffect(() => {
+    window.localStorage.setItem(uiStateKey, serializeUIState(uiState));
+    window.localStorage.setItem(legacyBackendUrlKey, uiState.backendUrl);
+  }, [uiState]);
+
+  useEffect(() => {
+    const snapshot = decodeSnapshotHash(window.location.hash);
+    if (!snapshot) {
+      return;
+    }
+    setUIState({ ...snapshot.ui, snapshotMessages: snapshot.messages });
+    setToast({ kind: "success", message: "Restored shared localhuman-mail state" });
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  }, []);
+
+  const patchUIState = (patch: Partial<UIState>) => {
+    setUIState((current) => ({ ...current, ...patch }));
+  };
 
   const versionQuery = useQuery({
-    queryKey: ["version", backendUrl],
+    queryKey: ["version", uiState.backendUrl],
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/version");
       if (error || !data) throw new Error(errorMessage(error, "Backend version unavailable"));
@@ -52,7 +106,7 @@ export function App() {
   });
 
   const capabilitiesQuery = useQuery({
-    queryKey: ["capabilities", backendUrl],
+    queryKey: ["capabilities", uiState.backendUrl],
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/capabilities");
       if (error || !data) throw new Error(errorMessage(error, "Capabilities unavailable"));
@@ -70,7 +124,7 @@ export function App() {
   });
 
   const messagesQuery = useQuery({
-    queryKey: ["messages", backendUrl],
+    queryKey: ["messages", uiState.backendUrl],
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/messages", {
         params: { query: { limit: 100 } }
@@ -83,12 +137,21 @@ export function App() {
   });
 
   const backendOnline = versionQuery.isSuccess;
-  const sourceMessages = messagesQuery.data?.length ? messagesQuery.data : demoMessages;
-  const visibleMessages = filterMessages(sourceMessages, query);
+  const backendMessages = messagesQuery.data ?? [];
+  const sourceMessages = backendMessages.length
+    ? backendMessages
+    : uiState.snapshotMessages.length
+      ? uiState.snapshotMessages
+      : demoMessages;
+  const visibleMessages = filterMessages(sourceMessages, uiState.query);
+  const currentMessages = visibleMessages.length ? visibleMessages : sourceMessages;
   const selectedMessage =
-    visibleMessages.find((message) => message.id === selectedId) ??
+    visibleMessages.find((message) => message.id === uiState.selectedId) ??
     visibleMessages[0] ??
     sourceMessages[0];
+  const hasSnapshot = uiState.snapshotMessages.length > 0 && backendMessages.length === 0;
+  const batchSummary = summarizeBatch(importResults);
+  const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
 
   const importDemoMutation = useMutation({
     mutationFn: async () => {
@@ -97,8 +160,8 @@ export function App() {
       return data;
     },
     onSuccess: async (result) => {
-      setToast({ kind: "success", message: `Imported ${result.imported} demo messages` });
-      await queryClient.invalidateQueries({ queryKey: ["messages", backendUrl] });
+      setToast({ kind: "success", message: `Imported ${result.imported} backend demo messages` });
+      await queryClient.invalidateQueries({ queryKey: ["messages", uiState.backendUrl] });
     },
     onError: (error) => {
       setToast({
@@ -108,42 +171,23 @@ export function App() {
     }
   });
 
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const body = new FormData();
-      body.append("file", file);
-      const { data, error } = await api.POST("/api/v1/import/eml", {
-        body: body as never
-      });
-      if (error || !data) throw new Error(errorMessage(error, "EML import failed"));
-      return data;
-    },
-    onSuccess: async (result) => {
-      setToast({ kind: "success", message: `Imported ${result.imported} message` });
-      await queryClient.invalidateQueries({ queryKey: ["messages", backendUrl] });
-    },
-    onError: (error) => {
-      setToast({ kind: "error", message: errorMessage(error, "Could not import this EML file") });
-    }
-  });
-
   const assistMutation = useMutation({
     mutationFn: async (message: Message) => {
       if (!backendOnline) {
         return {
-          draft: fallbackDraft(message, tone),
+          draft: fallbackDraft(message, uiState.tone),
           model: "browser-demo",
-          source: "fallback" as const
+          source: "fallback"
         };
       }
       const { data, error } = await api.POST("/api/v1/assist/reply", {
-        body: { messageId: message.id, tone }
+        body: { messageId: message.id, tone: uiState.tone }
       });
       if (error || !data) throw new Error(errorMessage(error, "Reply assist failed"));
       return data;
     },
     onSuccess: (result) => {
-      setDraft(result.draft);
+      patchUIState({ draft: result.draft });
       setToast({ kind: "success", message: `Draft generated by ${result.model}` });
     },
     onError: (error) => {
@@ -151,8 +195,153 @@ export function App() {
     }
   });
 
+  const importFiles = async (files: File[]) => {
+    if (!backendOnline) {
+      setToast({ kind: "error", message: "Start the backend before importing mail." });
+      return;
+    }
+    if (files.length === 0) {
+      return;
+    }
+    const initialResults: FileImportResult[] = files.map((file, index) => ({
+      id: fileResultId(file, index),
+      name: file.name,
+      size: file.size,
+      status: "pending",
+      imported: 0,
+      skipped: 0
+    }));
+    setImportResults(initialResults);
+    setIsImporting(true);
+    try {
+      for (const [index, file] of files.entries()) {
+        const id = initialResults[index].id;
+        try {
+          if (!(await fileLooksLikeEML(file))) {
+            updateImportResult(id, {
+              status: "error",
+              error: "This file does not look like an exported .eml message.",
+              imported: 0,
+              skipped: 0
+            });
+            continue;
+          }
+          const result = await uploadEmlFile(uiState.backendUrl, file);
+          updateImportResult(id, {
+            status: result.imported > 0 ? "imported" : "skipped",
+            imported: result.imported,
+            skipped: result.skipped
+          });
+        } catch (error) {
+          updateImportResult(id, {
+            status: "error",
+            error: errorMessage(error, "Could not import this file"),
+            imported: 0,
+            skipped: 0
+          });
+        }
+      }
+      await queryClient.invalidateQueries({ queryKey: ["messages", uiState.backendUrl] });
+      setToast({ kind: "success", message: "Batch import finished" });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const updateImportResult = (id: string, patch: Partial<FileImportResult>) => {
+    setImportResults((current) =>
+      current.map((result) => (result.id === id ? { ...result, ...patch } : result))
+    );
+  };
+
+  const importPasteText = async () => {
+    const text = uiState.pasteText.trim();
+    if (!looksLikeEMLText(text)) {
+      setToast({
+        kind: "error",
+        message: "Paste raw .eml text with headers such as From, To, Subject, or Date."
+      });
+      return;
+    }
+    await importFiles([textToEmlFile(text)]);
+    patchUIState({ pasteText: "" });
+  };
+
+  const importClipboardText = async () => {
+    try {
+      const text = await readClipboardText();
+      patchUIState({ pasteText: text });
+      if (looksLikeEMLText(text)) {
+        await importFiles([textToEmlFile(text)]);
+        patchUIState({ pasteText: "" });
+      } else {
+        setToast({ kind: "error", message: "Clipboard text does not look like raw .eml content." });
+      }
+    } catch (error) {
+      setToast({ kind: "error", message: errorMessage(error, "Paste into the text box instead.") });
+    }
+  };
+
+  const copyValue = async (value: string, label: string) => {
+    try {
+      await copyText(value);
+      setToast({ kind: "success", message: `${label} copied` });
+    } catch (error) {
+      setToast({ kind: "error", message: errorMessage(error, `Could not copy ${label}`) });
+    }
+  };
+
+  const exportSnapshot = () => {
+    const snapshot = createSnapshot(uiState, currentMessages, buildInfo);
+    downloadTextFile(stateFileName, snapshotToJSON(snapshot), "application/json");
+    setToast({ kind: "success", message: "State file downloaded" });
+  };
+
+  const importSnapshotFile = async (file: File) => {
+    try {
+      const snapshot = parseSnapshotText(await file.text());
+      setUIState({ ...snapshot.ui, snapshotMessages: snapshot.messages });
+      setToast({ kind: "success", message: `Restored ${snapshot.messages.length} messages` });
+    } catch (error) {
+      setToast({ kind: "error", message: errorMessage(error, "State file could not be imported") });
+    }
+  };
+
+  const shareSnapshot = async () => {
+    const snapshot = createSnapshot(uiState, sourceMessages, buildInfo);
+    const url = new URL(window.location.href);
+    url.hash = encodeSnapshotHash(snapshot);
+    if (url.href.length > maxShareUrlLength) {
+      setToast({
+        kind: "error",
+        message: "This state is too large for a share URL. Download a state file instead."
+      });
+      return;
+    }
+    window.history.replaceState(null, "", url);
+    await copyValue(url.href, "Share URL");
+  };
+
+  const clearLocalState = () => {
+    setUIState(defaultUIState(defaultBackendUrl));
+    setImportResults([]);
+    setToast({ kind: "success", message: "Local UI state cleared" });
+  };
+
   return (
-    <main className="min-h-screen bg-paper text-ink">
+    <main
+      className={`min-h-screen bg-paper text-ink ${dragActive ? "ring-4 ring-fern" : ""}`}
+      onDragOver={(event) => {
+        event.preventDefault();
+        setDragActive(true);
+      }}
+      onDragLeave={() => setDragActive(false)}
+      onDrop={(event) => {
+        event.preventDefault();
+        setDragActive(false);
+        void importFiles(Array.from(event.dataTransfer.files));
+      }}
+    >
       <div className="mx-auto grid min-h-screen max-w-[1500px] grid-cols-1 lg:grid-cols-[280px_minmax(420px,520px)_1fr]">
         <aside className="border-b border-line bg-white px-5 py-5 lg:border-b-0 lg:border-r">
           <div className="flex items-center gap-3">
@@ -165,7 +354,7 @@ export function App() {
             </div>
           </div>
 
-          <div className="mt-7 space-y-3">
+          <div className="mt-7 space-y-3 print:hidden">
             <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-steel">
               Backend
             </label>
@@ -174,8 +363,8 @@ export function App() {
               <input
                 aria-label="Backend URL"
                 className="min-w-0 flex-1 bg-transparent text-sm outline-none"
-                value={backendUrl}
-                onChange={(event) => setBackendUrl(event.target.value)}
+                value={uiState.backendUrl}
+                onChange={(event) => patchUIState({ backendUrl: event.target.value })}
               />
             </div>
             <div className="flex items-center gap-2 text-sm">
@@ -187,7 +376,7 @@ export function App() {
             </div>
           </div>
 
-          <div className="mt-7 grid grid-cols-2 gap-2">
+          <div className="mt-7 grid grid-cols-2 gap-2 print:hidden">
             <a
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
               href={repoUrl}
@@ -208,15 +397,53 @@ export function App() {
             </a>
           </div>
 
-          <div className="mt-7 space-y-2 rounded-lg border border-line bg-paper p-3">
+          <div className="mt-7 space-y-2 rounded-lg border border-line bg-paper p-3 print:hidden">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <ShieldCheck aria-hidden="true" className="h-4 w-4 text-fern" />
               Local boundary
             </div>
             <p className="text-sm leading-6 text-steel">
-              Mailbox data stays in the backend runtime store; this Pages app stores only UI
-              settings.
+              Mail stays in your backend unless you explicitly export or import a browser state
+              file.
             </p>
+          </div>
+
+          <div className="mt-7 space-y-2 print:hidden">
+            <button
+              type="button"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+              onClick={() => stateInputRef.current?.click()}
+            >
+              <Upload aria-hidden="true" className="h-4 w-4" />
+              Import state
+            </button>
+            <button
+              type="button"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+              onClick={exportSnapshot}
+            >
+              <Download aria-hidden="true" className="h-4 w-4" />
+              Export state
+            </button>
+            <button
+              type="button"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+              onClick={clearLocalState}
+            >
+              <Trash2 aria-hidden="true" className="h-4 w-4" />
+              Clear local
+            </button>
+            <input
+              ref={stateInputRef}
+              className="hidden"
+              type="file"
+              accept="application/json,.json"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void importSnapshotFile(file);
+                event.currentTarget.value = "";
+              }}
+            />
           </div>
 
           <dl className="mt-7 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-xs text-steel">
@@ -248,7 +475,7 @@ export function App() {
           </dl>
         </aside>
 
-        <section className="border-b border-line bg-white lg:border-b-0 lg:border-r">
+        <section className="border-b border-line bg-white lg:border-b-0 lg:border-r print:hidden">
           <div className="sticky top-0 z-10 border-b border-line bg-white/95 px-4 py-4 backdrop-blur">
             <div className="flex items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2">
               <Search aria-hidden="true" className="h-4 w-4 text-steel" />
@@ -256,8 +483,8 @@ export function App() {
                 aria-label="Search messages"
                 placeholder="Search mail"
                 className="min-w-0 flex-1 bg-transparent text-sm outline-none"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                value={uiState.query}
+                onChange={(event) => patchUIState({ query: event.target.value })}
               />
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -271,12 +498,21 @@ export function App() {
                 Demo
               </button>
               <button
-                className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+                className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper disabled:cursor-not-allowed disabled:opacity-60"
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
+                disabled={isImporting}
               >
                 <Upload aria-hidden="true" className="h-4 w-4" />
-                EML
+                EML files
+              </button>
+              <button
+                className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+                type="button"
+                onClick={() => void importClipboardText()}
+              >
+                <Clipboard aria-hidden="true" className="h-4 w-4" />
+                Clipboard
               </button>
               <button
                 className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
@@ -290,15 +526,62 @@ export function App() {
                 ref={fileInputRef}
                 className="hidden"
                 type="file"
-                accept=".eml,message/rfc822"
+                accept=".eml,message/rfc822,text/plain"
+                multiple
                 onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) uploadMutation.mutate(file);
+                  void importFiles(Array.from(event.target.files ?? []));
                   event.currentTarget.value = "";
                 }}
               />
             </div>
+            <textarea
+              aria-label="Paste raw EML text"
+              className="mt-3 min-h-20 w-full resize-y rounded-lg border border-line bg-paper p-3 text-sm leading-6 outline-none focus:border-fern"
+              placeholder="Paste raw .eml text here"
+              value={uiState.pasteText}
+              onChange={(event) => patchUIState({ pasteText: event.target.value })}
+            />
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={!uiState.pasteText.trim() || isImporting}
+                onClick={() => void importPasteText()}
+              >
+                <Upload aria-hidden="true" className="h-4 w-4" />
+                Import paste
+              </button>
+              <span className="text-xs text-steel">
+                Drop files anywhere. {hasSnapshot ? "Viewing imported state." : "Demo fills gaps."}
+              </span>
+            </div>
           </div>
+
+          {importResults.length ? (
+            <div className="border-b border-line bg-paper px-4 py-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2 font-semibold">
+                <span>{isImporting ? "Importing" : "Import complete"}</span>
+                <span className="text-steel">
+                  {batchSummary.imported} imported, {batchSummary.skipped} skipped,{" "}
+                  {batchSummary.failed} failed
+                </span>
+              </div>
+              <div className="mt-2 grid gap-1">
+                {importResults.map((result) => (
+                  <div key={result.id} className="flex items-start justify-between gap-3 text-xs">
+                    <span className="min-w-0 truncate">{result.name}</span>
+                    <span
+                      className={`shrink-0 ${
+                        result.status === "error" ? "text-rose-700" : "text-steel"
+                      }`}
+                    >
+                      {result.error ?? result.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <div className="divide-y divide-line" aria-label="Message list">
             {visibleMessages.map((message) => {
@@ -311,8 +594,7 @@ export function App() {
                     selected ? "bg-emerald-50" : "bg-white"
                   }`}
                   onClick={() => {
-                    setSelectedId(message.id);
-                    setDraft("");
+                    patchUIState({ selectedId: message.id, draft: "" });
                   }}
                 >
                   <span className="flex items-center justify-between gap-3">
@@ -325,8 +607,14 @@ export function App() {
                   <span className="line-clamp-2 text-sm leading-6 text-steel">
                     {message.snippet}
                   </span>
-                  <span className="flex flex-wrap gap-1.5">
-                    {message.tags.map((tag) => (
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <span className="rounded-md border border-line bg-white px-2 py-0.5 text-xs text-steel">
+                      {message.shape}
+                    </span>
+                    <span className="rounded-md border border-line bg-white px-2 py-0.5 text-xs text-steel">
+                      {message.confidence.label}
+                    </span>
+                    {message.tags.slice(0, 4).map((tag) => (
                       <span
                         key={tag}
                         className="rounded-md border border-line bg-white px-2 py-0.5 text-xs text-steel"
@@ -352,48 +640,144 @@ export function App() {
                       {selectedMessage.subject}
                     </h2>
                   </div>
-                  <a
-                    className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
-                    href={repoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <ExternalLink aria-hidden="true" className="h-4 w-4" />
-                    GitHub
-                  </a>
+                  <div className="flex flex-wrap items-center gap-2 print:hidden">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+                      onClick={() => void copyValue(selectedMessage.body, "Body")}
+                    >
+                      <Clipboard aria-hidden="true" className="h-4 w-4" />
+                      Body
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+                      onClick={() =>
+                        downloadTextFile(
+                          "localhuman-mail-messages.json",
+                          messageListToJSON(currentMessages),
+                          "application/json"
+                        )
+                      }
+                    >
+                      <FileJson aria-hidden="true" className="h-4 w-4" />
+                      JSON
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+                      onClick={() =>
+                        downloadTextFile(
+                          "localhuman-mail-messages.csv",
+                          messageListToCSV(currentMessages),
+                          "text/csv"
+                        )
+                      }
+                    >
+                      <Download aria-hidden="true" className="h-4 w-4" />
+                      CSV
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+                      onClick={() => void shareSnapshot()}
+                    >
+                      <Link aria-hidden="true" className="h-4 w-4" />
+                      Share
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+                      onClick={() => window.print()}
+                    >
+                      <Printer aria-hidden="true" className="h-4 w-4" />
+                      Print
+                    </button>
+                    <a
+                      className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:bg-paper"
+                      href={repoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <ExternalLink aria-hidden="true" className="h-4 w-4" />
+                      GitHub
+                    </a>
+                  </div>
                 </div>
                 <dl className="mt-4 grid gap-2 text-sm text-steel">
                   <div className="flex gap-2">
-                    <dt className="w-12 text-ink">From</dt>
+                    <dt className="w-20 text-ink">From</dt>
                     <dd>{selectedMessage.from}</dd>
                   </div>
                   <div className="flex gap-2">
-                    <dt className="w-12 text-ink">To</dt>
-                    <dd>{selectedMessage.to.join(", ")}</dd>
+                    <dt className="w-20 text-ink">To</dt>
+                    <dd>{selectedMessage.to.join(", ") || "(none)"}</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="w-20 text-ink">Shape</dt>
+                    <dd>
+                      {selectedMessage.shape} · {selectedMessage.confidence.label} confidence
+                    </dd>
                   </div>
                 </dl>
+                {selectedMessage.attachments.length ? (
+                  <div className="mt-4 flex flex-wrap gap-2 text-sm text-steel">
+                    {selectedMessage.attachments.map((attachment) => (
+                      <span
+                        key={`${attachment.fileName}-${attachment.sizeBytes}`}
+                        className="inline-flex items-center gap-2 rounded-lg border border-line px-2 py-1"
+                      >
+                        <Paperclip aria-hidden="true" className="h-4 w-4" />
+                        {attachment.fileName}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                {selectedMessage.warnings.length ? (
+                  <div className="mt-4 grid gap-2">
+                    {selectedMessage.warnings.map((warning) => (
+                      <div
+                        key={`${warning.field}-${warning.message}`}
+                        className="rounded-lg border border-line bg-paper p-3 text-sm leading-6"
+                      >
+                        <div className="flex items-center gap-2 font-semibold">
+                          <ShieldAlert aria-hidden="true" className="h-4 w-4 text-coral" />
+                          {warning.message}
+                        </div>
+                        <p className="text-steel">{warning.nextStep}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </header>
 
               <div className="overflow-auto px-5 py-6">
                 <pre className="whitespace-pre-wrap font-sans text-base leading-7 text-ink">
                   {selectedMessage.body}
                 </pre>
+                {debugEnabled ? (
+                  <pre className="mt-4 overflow-auto rounded-lg border border-line bg-paper p-3 text-xs leading-5 text-steel">
+                    {JSON.stringify(selectedMessage, null, 2)}
+                  </pre>
+                ) : null}
               </div>
 
-              <footer className="border-t border-line bg-paper px-5 py-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  {(["concise", "warm", "decisive"] as const).map((item) => (
+              <footer className="border-t border-line bg-paper px-5 py-4 print:bg-white">
+                <div className="flex flex-wrap items-center gap-2 print:hidden">
+                  {toneOptions.map((item) => (
                     <button
                       key={item}
                       type="button"
                       className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold capitalize ${
-                        tone === item
+                        uiState.tone === item
                           ? "border-fern bg-emerald-50 text-fern"
                           : "border-line bg-white"
                       }`}
-                      onClick={() => setTone(item)}
+                      onClick={() => patchUIState({ tone: item })}
                     >
-                      {tone === item ? <Check aria-hidden="true" className="h-4 w-4" /> : null}
+                      {uiState.tone === item ? (
+                        <Check aria-hidden="true" className="h-4 w-4" />
+                      ) : null}
                       {item}
                     </button>
                   ))}
@@ -406,13 +790,23 @@ export function App() {
                     <Bot aria-hidden="true" className="h-4 w-4" />
                     Draft
                   </button>
+                  {uiState.draft ? (
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold hover:bg-paper"
+                      onClick={() => void copyValue(uiState.draft, "Draft")}
+                    >
+                      <Clipboard aria-hidden="true" className="h-4 w-4" />
+                      Copy draft
+                    </button>
+                  ) : null}
                 </div>
-                {draft ? (
+                {uiState.draft ? (
                   <textarea
                     aria-label="Generated reply draft"
-                    className="mt-3 min-h-36 w-full resize-y rounded-lg border border-line bg-white p-3 text-sm leading-6 outline-none focus:border-fern"
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
+                    className="mt-3 min-h-36 w-full resize-y rounded-lg border border-line bg-white p-3 text-sm leading-6 outline-none focus:border-fern print:border-0 print:p-0"
+                    value={uiState.draft}
+                    onChange={(event) => patchUIState({ draft: event.target.value })}
                   />
                 ) : null}
               </footer>
@@ -429,10 +823,19 @@ export function App() {
         {versionQuery.isFetching ||
         messagesQuery.isFetching ||
         capabilitiesQuery.isFetching ||
-        latestCommitQuery.isFetching
+        latestCommitQuery.isFetching ||
+        isImporting
           ? "Refreshing"
           : "Idle"}
       </div>
     </main>
   );
+}
+
+function initialUIState() {
+  if (typeof window === "undefined") {
+    return defaultUIState(defaultBackendUrl);
+  }
+  const fallbackBackendUrl = window.localStorage.getItem(legacyBackendUrlKey) ?? defaultBackendUrl;
+  return parseStoredUIState(window.localStorage.getItem(uiStateKey), fallbackBackendUrl);
 }

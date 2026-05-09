@@ -88,7 +88,17 @@ export function filterMessages(messages: Message[], query: string) {
   }
 
   return messages.filter((message) =>
-    [message.subject, message.from, message.snippet, message.body, ...message.tags]
+    [
+      message.subject,
+      message.from,
+      message.snippet,
+      message.body,
+      message.shape,
+      message.confidence.label,
+      ...message.tags,
+      ...message.warnings.map((warning) => warning.message),
+      ...message.attachments.map((attachment) => attachment.fileName)
+    ]
       .join(" ")
       .toLowerCase()
       .includes(normalized)
