@@ -30,7 +30,7 @@ dev: ## Run backend and frontend locally
 
 build: generate ## Build backend binary and Pages-ready frontend
 	mkdir -p bin $(GOTMP)
-	npm --prefix frontend run build
+	LOCALHUMAN_BUILD_COMMIT=$(COMMIT) LOCALHUMAN_BUILD_TIME=$(BUILD_TIME) npm --prefix frontend run build
 	$(GO_ENV) go build -trimpath -ldflags="-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT) -X main.buildTime=$(BUILD_TIME)" -o bin/$(APP_NAME) ./cmd/server
 	test -f docs/index.html
 	test -s docs/index.html
