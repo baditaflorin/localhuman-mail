@@ -1,0 +1,11 @@
+{
+  "source": "RFC5545-style calendar invite fixture",
+  "mustImport": true,
+  "expectedShape": "calendar_invite",
+  "mustContain": ["Design Review", "Conference Room A"],
+  "minConfidence": 0.8,
+  "expectedAttachmentCount": 0,
+  "expectedWarningsContain": ["calendar"],
+  "deterministic": true
+}
+

@@ -1,0 +1,11 @@
+{
+  "source": "Apache SpamAssassin public corpus hard_ham/0017",
+  "mustImport": true,
+  "expectedShape": "newsletter",
+  "mustContain": ["ThinkPads", "CNET"],
+  "minConfidence": 0.65,
+  "expectedAttachmentCount": 0,
+  "expectedWarningsContain": ["HTML"],
+  "deterministic": true
+}
+

@@ -1,0 +1,11 @@
+{
+  "source": "Apache SpamAssassin public corpus spam/0266",
+  "mustImport": true,
+  "expectedShape": "attachment_only",
+  "mustContain": ["K1-Ausgabe"],
+  "minConfidence": 0.65,
+  "expectedAttachmentCount": 1,
+  "expectedWarningsContain": ["attachment"],
+  "deterministic": true
+}
+

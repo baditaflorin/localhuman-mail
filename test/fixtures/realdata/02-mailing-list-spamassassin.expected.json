@@ -1,0 +1,11 @@
+{
+  "source": "Apache SpamAssassin public corpus easy_ham/1528",
+  "mustImport": true,
+  "expectedShape": "mailing_list",
+  "mustContain": ["SpamAssassin", "Custom actions"],
+  "minConfidence": 0.75,
+  "expectedAttachmentCount": 0,
+  "expectedWarningsContain": ["mailing list"],
+  "deterministic": true
+}
+

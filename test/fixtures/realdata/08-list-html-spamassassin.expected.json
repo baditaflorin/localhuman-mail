@@ -1,0 +1,11 @@
+{
+  "source": "Apache SpamAssassin public corpus hard_ham/0181",
+  "mustImport": true,
+  "expectedShape": "newsletter",
+  "mustContain": ["Transportation Rage", "Lockergnome"],
+  "minConfidence": 0.7,
+  "expectedAttachmentCount": 0,
+  "expectedWarningsContain": ["HTML", "unsubscribe"],
+  "deterministic": true
+}
+

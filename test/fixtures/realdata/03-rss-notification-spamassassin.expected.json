@@ -1,0 +1,11 @@
+{
+  "source": "Apache SpamAssassin public corpus easy_ham/2415",
+  "mustImport": true,
+  "expectedShape": "notification",
+  "mustContain": ["Accessibility", "watershed"],
+  "minConfidence": 0.65,
+  "expectedAttachmentCount": 0,
+  "expectedWarningsContain": [],
+  "deterministic": true
+}
+

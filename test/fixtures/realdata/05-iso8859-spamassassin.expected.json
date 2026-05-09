@@ -1,0 +1,11 @@
+{
+  "source": "Apache SpamAssassin public corpus spam/0246",
+  "mustImport": true,
+  "expectedShape": "unknown",
+  "mustContain": ["International calls", "33 cents"],
+  "minConfidence": 0.55,
+  "expectedAttachmentCount": 0,
+  "expectedWarningsContain": ["charset"],
+  "deterministic": true
+}
+

@@ -1,0 +1,11 @@
+{
+  "source": "Truncated derivative of Apache SpamAssassin public corpus spam/0266",
+  "mustImport": true,
+  "expectedShape": "attachment_only",
+  "mustContain": ["K1-Ausgabe"],
+  "minConfidence": 0.35,
+  "expectedAttachmentCount": 0,
+  "expectedWarningsContain": ["partial"],
+  "deterministic": true
+}
+

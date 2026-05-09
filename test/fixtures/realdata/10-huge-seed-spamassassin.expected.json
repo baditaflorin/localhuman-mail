@@ -1,0 +1,11 @@
+{
+  "source": "Apache SpamAssassin public corpus hard_ham/0109 used as huge-input seed",
+  "mustImport": true,
+  "expectedShape": "newsletter",
+  "mustContain": ["MP3 players", "CNET SHOPPER"],
+  "minConfidence": 0.65,
+  "expectedAttachmentCount": 0,
+  "expectedWarningsContain": ["HTML"],
+  "deterministic": true
+}
+

@@ -1,0 +1,11 @@
+{
+  "source": "Apache SpamAssassin public corpus easy_ham/1845",
+  "mustImport": true,
+  "expectedShape": "personal_reply",
+  "mustContain": ["duplicate", "DCC"],
+  "minConfidence": 0.7,
+  "expectedAttachmentCount": 0,
+  "expectedWarningsContain": ["quoted"],
+  "deterministic": true
+}
+
