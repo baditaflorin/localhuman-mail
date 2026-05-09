@@ -88,6 +88,7 @@ func (handler *Handler) importDemo(w http.ResponseWriter, r *http.Request) {
 
 func (handler *Handler) importEML(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, mailbox.MaxEMLBytes+(1<<20))
+	// #nosec G120 -- the request body is capped above before multipart parsing.
 	if err := r.ParseMultipartForm(mailbox.MaxEMLBytes + (1 << 20)); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid multipart upload")
 		return
