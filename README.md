@@ -26,11 +26,13 @@ make dev
 
 The frontend runs with Vite in development and builds into `docs/` for GitHub Pages. The backend listens on `http://localhost:8080` by default.
 
-## What Works In V1
+## Verified Features
 
-- GitHub Pages frontend with repo, PayPal, version, and commit metadata visible in the UI.
-- Go backend with `/healthz`, `/readyz`, `/metrics`, `/api/v1/version`, mailbox import, search, and reply assist.
-- EML import, synthetic demo import, SQLite-backed local message storage, and local search.
+- GitHub Pages frontend with repo, PayPal, version, and commit metadata visible in the UI (`frontend/e2e/app.spec.ts`).
+- Go backend with `/healthz`, `/readyz`, `/metrics`, `/api/v1/version`, mailbox import, search, and reply assist (`scripts/smoke.sh`).
+- Real `.eml` import through picker, drag/drop, paste, clipboard, and multi-file batch paths; parser fixtures live in `test/fixtures/realdata/`.
+- JSON, CSV, state-file, share-link, print, body-copy, and draft-copy output paths (`frontend/src/features/mail/workbench.test.ts`, `frontend/e2e/app.spec.ts`).
+- Versioned UI state persistence for backend URL, query, selected message, tone, draft, paste text, and explicit imported snapshots.
 - Local LLM reply assist through Ollama, with a local template fallback.
 - Capability detection for `readpst`, libmagic via `file`, Tantivy CLI, sentence-transformers, `age`, SQLite, and Ollama.
 - Docker Compose production topology with nginx on public host port `25342`.
@@ -75,6 +77,13 @@ make smoke
 make docker-build
 ```
 
+## Current Limitations
+
+- PST, Maildir, IMAP sync, Tantivy indexing, sentence-transformer ranking, and `age` encryption are capability boundaries, not finished UI workflows.
+- Attachment contents are detected as metadata but not indexed or opened.
+- Share URLs are intended for small filtered snapshots; larger sessions should use `Export state`.
+- The GitHub Pages frontend never stores mailbox credentials. Browser state can contain mailbox content only after an explicit state import/share/export action.
+
 ## Configuration
 
 Copy `.env.example` for local backend values. Never commit real `.env` files, mailbox data, private keys, or credentials.
@@ -94,4 +103,3 @@ Live URL: https://baditaflorin.github.io/localhuman-mail/
 No mailbox contents, credentials, tokens, or private keys belong in git. The frontend stores only non-sensitive UI settings. Mailbox contents stay in the backend runtime volume.
 
 Security policy: SECURITY.md
-
