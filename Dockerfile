@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . .
 
-ARG VERSION=0.1.0
+ARG VERSION=0.3.0
 ARG COMMIT=dev
 ARG BUILD_TIME=unknown
 
@@ -19,7 +19,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 
 FROM gcr.io/distroless/static-debian12:nonroot
 
-ARG VERSION=0.1.0
+ARG VERSION=0.3.0
 ARG COMMIT=dev
 ARG BUILD_TIME=unknown
 

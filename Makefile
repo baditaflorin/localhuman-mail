@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 APP_NAME := localhuman-mail
 REPO := ghcr.io/baditaflorin/$(APP_NAME)
-VERSION := 0.1.0
+VERSION := 0.3.0
 COMMIT := $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo dev)
 BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 GO_PACKAGES := ./cmd/... ./internal/...
