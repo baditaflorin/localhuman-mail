@@ -16,4 +16,20 @@ Status legend: green = works end-to-end; yellow = partial; red = not usable; gra
 | Embed code | gray | Not relevant for private mailbox content. | Would encourage sharing private data. | Out of scope. |
 | API/curl-ready | yellow | OpenAPI exists; README links it. | UI does not surface curl-ready evidence. | Finish by documenting verified API path; no UI control needed. |
 
-Initial counts: green 0, yellow 3, red 6, gray 2.
+## After Phase 3
+
+| Pathway | After | Evidence |
+| --- | --- | --- |
+| Copy generated reply | green | `Copy draft` button writes to clipboard; Playwright verifies the success toast. |
+| Copy message body | green | `Body` copy button writes selected normalized body; Playwright verifies the success toast. |
+| JSON export | green | Detail toolbar downloads current filtered message list as JSON. |
+| CSV export | green | Detail toolbar downloads current filtered message list as CSV. |
+| Downloadable state file | green | `Export state` downloads `localhuman-mail-state.json`; Playwright verifies filename. |
+| Import state file round-trip | green | Versioned zod-validated state import is implemented and unit-tested. |
+| Shareable URL | green | Hash-encoded snapshots are generated for small current lists and copied. |
+| Print view | green | Print button calls `window.print()` and print CSS hides controls. |
+| Screenshot | gray | Still out of scope. |
+| Embed code | gray | Still out of scope for private mailbox data. |
+| API/curl-ready | green | README and `docs/api.md` point at OpenAPI; smoke verifies REST endpoints. |
+
+Final counts: green 9, yellow 0, red 0, gray 2.

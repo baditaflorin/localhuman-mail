@@ -17,4 +17,27 @@
 | Draft button | green | Uses backend assist when online, browser fallback offline. | Keep. |
 | Draft textarea | yellow | Editable but not saved, copied, or exported. | Persist and add copy. |
 
-Initial counts: green 9, yellow 5, red 0.
+## After Phase 3
+
+| Control | After | Evidence |
+| --- | --- | --- |
+| Backend URL input | green | Persists in versioned UI state and legacy key for compatibility. |
+| Connected/Demo status | green | Still driven by `/api/v1/version`. |
+| Star link | green | Unchanged and tested. |
+| PayPal link | green | Unchanged and tested. |
+| Demo button | green | Clearly imports backend demo messages when connected; offline demo remains visible. |
+| EML files button | green | Multi-file picker, per-file progress, real fixture e2e. |
+| Clipboard button | green | Reads clipboard and imports when content looks like raw `.eml`. |
+| Sync button | green | Invalidates query cache. |
+| Paste raw EML text box/import button | green | Validates raw headers and imports pasted content. |
+| Import state | green | Validates JSON snapshot before applying. |
+| Export state | green | Downloads versioned state file. |
+| Clear local | green | Resets UI state to defaults. |
+| Search input | green | Filters subject, sender, body, shape, confidence, warnings, attachments, and tags. |
+| Message row buttons | green | Select message and clear draft. |
+| Detail export/copy/share/print controls | green | Copy, JSON, CSV, state/share, print are wired. |
+| Tone buttons | green | Persist in UI state. |
+| Draft button | green | Backend or fallback assist works. |
+| Draft textarea | green | Editable, persistent, copyable, exportable through state. |
+
+Final counts: green 18, yellow 0, red 0.

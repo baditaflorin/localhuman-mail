@@ -19,4 +19,23 @@ Status legend: green = works end-to-end on real data; yellow = partial or backen
 | Imported state file | red | No state import format. | Users cannot leave and reload a curated session elsewhere. | Finish. |
 | Restored autosave | yellow | Backend URL persists in `localStorage`; selected message, query, tone, draft do not. | Refresh loses work-in-progress UI context. | Finish with versioned UI state. |
 
-Initial counts: green 1, yellow 4, red 6, gray 4.
+## After Phase 3
+
+| Pathway | After | Evidence |
+| --- | --- | --- |
+| Single `.eml` file picker | green | `EML files` picker accepts `.eml`; Playwright uploads `06-calendar-invite-rfc5545.eml`. |
+| Drag-and-drop `.eml` | green | Page-level drop handler routes files through the same batch importer. |
+| Multi-file batch `.eml` | green | File input uses `multiple`; batch results track per-file imported/skipped/error states. |
+| Paste raw `.eml` text | green | Paste text box validates raw headers and imports as an `.eml` `File`. |
+| Paste rendered HTML | gray | ADR 0061 keeps this out of scope because rendered HTML loses mail headers. |
+| Paste image | gray | ADR 0061 keeps OCR/screenshot import out of scope. |
+| URL input | gray | ADR 0061 keeps private URL fetch out of scope for secrets/CORS reasons. |
+| Clipboard read button | green | Clipboard button reads text with permission handling and falls back to the paste box. |
+| Mobile picker | green | Standard multi-file input works through mobile file providers that expose `.eml`; native phone testing remains documented as not available in this run. |
+| Folder import | gray | ADR 0061 keeps folder import out of scope; multi-file is the v1 path. |
+| Demo sample | green | Offline demo remains first-class; backend demo import remains available when connected. |
+| Deep links | green | Share button writes a hash-encoded state URL for small snapshots. |
+| Imported state file | green | `Import state` validates and restores a versioned JSON snapshot. |
+| Restored autosave | green | Versioned UI state persists backend URL, query, selection, tone, draft, paste text, and explicit snapshot messages. |
+
+Final counts: green 10, yellow 0, red 0, gray 4.

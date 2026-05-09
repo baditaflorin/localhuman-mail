@@ -47,4 +47,14 @@ No source-code TODO/FIXME/XXX/HACK markers found. Existing "future" language is 
 - No tests for multi-file import, state export/import, share URL, copy controls, or persistence migration.
 - Phase 2 fixture tests cover parser behavior, not UI completeness.
 
-Initial metrics: DRY issues 3, source TODO/FIXME/XXX/HACK 0, TypeScript unsafe casts 3, production UI stubs 0, real-user path test gaps 5.
+## After Phase 3
+
+| Metric | Before | After | Evidence |
+| --- | ---: | ---: | --- |
+| DRY issues in core workflow modules | 3 | 0 blocking | Import/export/state/share logic moved into `frontend/src/features/mail/workbench.ts` and `frontend/src/lib/browser.ts`; frontend/backend demo duplication remains accepted by ADR 0064. |
+| Source TODO/FIXME/XXX/HACK | 0 | 0 | `rg` audit. |
+| Unsafe authored TypeScript casts / `any` / `@ts-ignore` | 3 | 0 | `rg " as never|@ts-ignore|\\bany\\b" frontend/src --glob '!api/schema.d.ts'` returns no matches. |
+| Production UI stubs | 0 | 0 | Controls audit green. |
+| Real-user path test gaps | 5 | 0 blocking | Unit tests cover state/export helpers; Playwright covers upload/copy/draft/state/share. |
+
+Accepted residual debt: `frontend/src/App.tsx` remains a large composition component because splitting presentational layout further would be polish/refactor work after the Phase 3 functional gates. The core logic it used to own has been extracted and tested.
