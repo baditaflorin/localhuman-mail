@@ -87,8 +87,8 @@ func (handler *Handler) importDemo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handler *Handler) importEML(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, 32<<20)
-	if err := r.ParseMultipartForm(32 << 20); err != nil {
+	r.Body = http.MaxBytesReader(w, r.Body, mailbox.MaxEMLBytes+(1<<20))
+	if err := r.ParseMultipartForm(mailbox.MaxEMLBytes + (1 << 20)); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid multipart upload")
 		return
 	}
@@ -101,6 +101,11 @@ func (handler *Handler) importEML(w http.ResponseWriter, r *http.Request) {
 
 	message, err := mailbox.ParseEML(file)
 	if err != nil {
+		var importErr mailbox.ImportError
+		if errors.As(err, &importErr) {
+			writeImportError(w, http.StatusBadRequest, importErr)
+			return
+		}
 		writeError(w, http.StatusBadRequest, "could not parse EML")
 		return
 	}

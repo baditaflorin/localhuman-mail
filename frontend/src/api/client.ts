@@ -18,8 +18,14 @@ export function createApiClient(baseUrl: string): ApiClient {
 }
 
 export function errorMessage(error: unknown, fallback: string) {
-  if (error && typeof error === "object" && "error" in error && typeof error.error === "string") {
-    return error.error;
+  if (error && typeof error === "object") {
+    const payload = error as Partial<components["schemas"]["ErrorResponse"]>;
+    if (payload.what && payload.why && payload.nowWhat) {
+      return `${payload.what}. ${payload.why} ${payload.nowWhat}`;
+    }
+    if (typeof payload.error === "string") {
+      return payload.error;
+    }
   }
   if (error instanceof Error) {
     return error.message;

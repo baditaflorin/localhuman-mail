@@ -187,6 +187,7 @@ export interface components {
         };
         Message: {
             id: string;
+            sourceId: string;
             subject: string;
             from: string;
             to: string[];
@@ -194,7 +195,49 @@ export interface components {
             date: string;
             snippet: string;
             body: string;
+            primaryBody: string;
+            shape: string;
             tags: string[];
+            confidence: components["schemas"]["Confidence"];
+            fieldConfidence: {
+                [key: string]: components["schemas"]["Confidence"];
+            };
+            warnings: components["schemas"]["ImportWarning"][];
+            attachments: components["schemas"]["Attachment"][];
+            calendar?: components["schemas"]["CalendarEvent"];
+            provenance: components["schemas"]["Provenance"];
+        };
+        Confidence: {
+            score: number;
+            /** @enum {string} */
+            label: "low" | "medium" | "high";
+            reasons: string[];
+        };
+        ImportWarning: {
+            severity: string;
+            field: string;
+            message: string;
+            nextStep: string;
+        };
+        Attachment: {
+            fileName: string;
+            contentType: string;
+            /** Format: int64 */
+            sizeBytes: number;
+        };
+        CalendarEvent: {
+            summary: string;
+            location: string;
+            start: string;
+            end: string;
+        };
+        Provenance: {
+            sourceId: string;
+            sourceSha256: string;
+            parserVersion: string;
+            schemaVersion: string;
+            /** Format: int64 */
+            sizeBytes: number;
         };
         MessageListResponse: {
             messages: components["schemas"]["Message"][];
@@ -223,6 +266,10 @@ export interface components {
         };
         ErrorResponse: {
             error: string;
+            kind?: string;
+            what?: string;
+            why?: string;
+            nowWhat?: string;
         };
     };
     responses: never;

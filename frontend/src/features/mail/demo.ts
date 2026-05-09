@@ -1,7 +1,7 @@
 import type { Message } from "@/api/client";
 
 export const demoMessages: Message[] = [
-  {
+  demoMessage({
     id: "demo-1",
     subject: "Re: Contract redlines before the investor call",
     from: "maya@northstar.example",
@@ -13,9 +13,10 @@ export const demoMessages: Message[] = [
       "",
       "The long memo is useful, but the partner group is going to skim. I mostly need the parts that affect downside exposure, timeline, and approval authority."
     ].join("\n"),
-    tags: ["legal", "priority"]
-  },
-  {
+    shape: "personal_reply",
+    tags: ["imported", "personal_reply", "legal", "priority"]
+  }),
+  demoMessage({
     id: "demo-2",
     subject: "Thursday launch checklist",
     from: "ops@atelier.example",
@@ -27,9 +28,10 @@ export const demoMessages: Message[] = [
       "",
       "Everything else is green. If you can confirm owner and timing by noon, we can keep Thursday without compressing QA."
     ].join("\n"),
-    tags: ["launch"]
-  },
-  {
+    shape: "notification",
+    tags: ["imported", "notification", "launch"]
+  }),
+  demoMessage({
     id: "demo-3",
     subject: "Receipt for local model hardware",
     from: "receipts@compute.example",
@@ -41,9 +43,43 @@ export const demoMessages: Message[] = [
       "",
       "Tracking will update after carrier intake. The invoice is attached to this message in the original mailbox."
     ].join("\n"),
-    tags: ["finance"]
-  }
+    shape: "receipt_invoice",
+    tags: ["imported", "receipt_invoice", "finance"],
+    attachments: [{ fileName: "invoice.pdf", contentType: "application/pdf", sizeBytes: 0 }]
+  })
 ];
+
+type DemoMessageInput = Pick<
+  Message,
+  "id" | "subject" | "from" | "to" | "date" | "snippet" | "body" | "shape" | "tags"
+> & {
+  attachments?: Message["attachments"];
+};
+
+function demoMessage(input: DemoMessageInput): Message {
+  return {
+    ...input,
+    sourceId: "demo",
+    primaryBody: input.body,
+    confidence: { score: 0.9, label: "high", reasons: ["curated demo message"] },
+    fieldConfidence: {
+      subject: { score: 0.95, label: "high", reasons: ["curated demo subject"] },
+      from: { score: 0.95, label: "high", reasons: ["curated demo sender"] },
+      date: { score: 0.95, label: "high", reasons: ["curated demo date"] },
+      body: { score: 0.9, label: "high", reasons: ["curated demo body"] },
+      shape: { score: 0.85, label: "high", reasons: ["curated demo shape"] }
+    },
+    warnings: [],
+    attachments: input.attachments ?? [],
+    provenance: {
+      sourceId: "demo",
+      sourceSha256: input.id,
+      parserVersion: "demo",
+      schemaVersion: "message.v2",
+      sizeBytes: input.body.length
+    }
+  };
+}
 
 export function filterMessages(messages: Message[], query: string) {
   const normalized = query.trim().toLowerCase();

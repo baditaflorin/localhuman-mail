@@ -5,8 +5,10 @@ import (
 
 	"github.com/baditaflorin/localhuman-mail/internal/ai"
 	"github.com/baditaflorin/localhuman-mail/internal/config"
+	"github.com/baditaflorin/localhuman-mail/internal/mailbox"
 	"github.com/baditaflorin/localhuman-mail/internal/metrics"
 	"github.com/baditaflorin/localhuman-mail/internal/search"
+	"github.com/baditaflorin/localhuman-mail/internal/security"
 )
 
 type VersionInfo struct {
@@ -30,21 +32,25 @@ type HealthResponse struct {
 }
 
 type ErrorResponse struct {
-	Error string `json:"error"`
+	Error   string `json:"error"`
+	Kind    string `json:"kind,omitempty"`
+	What    string `json:"what,omitempty"`
+	Why     string `json:"why,omitempty"`
+	NowWhat string `json:"nowWhat,omitempty"`
 }
 
 type capabilitiesResponse struct {
-	Capabilities any `json:"capabilities"`
+	Capabilities []security.Capability `json:"capabilities"`
 }
 
 type messageListResponse struct {
-	Messages any `json:"messages"`
+	Messages []mailbox.Message `json:"messages"`
 }
 
 type searchResponse struct {
-	Query     string `json:"query"`
-	ElapsedMS int64  `json:"elapsedMs"`
-	Messages  any    `json:"messages"`
+	Query     string            `json:"query"`
+	ElapsedMS int64             `json:"elapsedMs"`
+	Messages  []mailbox.Message `json:"messages"`
 }
 
 type assistReplyRequest struct {

@@ -226,15 +226,25 @@ components:
       type: object
       required:
         - id
+        - sourceId
         - subject
         - from
         - to
         - date
         - snippet
         - body
+        - primaryBody
+        - shape
         - tags
+        - confidence
+        - fieldConfidence
+        - warnings
+        - attachments
+        - provenance
       properties:
         id:
+          type: string
+        sourceId:
           type: string
         subject:
           type: string
@@ -251,10 +261,119 @@ components:
           type: string
         body:
           type: string
+        primaryBody:
+          type: string
+        shape:
+          type: string
         tags:
           type: array
           items:
             type: string
+        confidence:
+          $ref: "#/components/schemas/Confidence"
+        fieldConfidence:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Confidence"
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportWarning"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attachment"
+        calendar:
+          $ref: "#/components/schemas/CalendarEvent"
+        provenance:
+          $ref: "#/components/schemas/Provenance"
+    Confidence:
+      type: object
+      required:
+        - score
+        - label
+        - reasons
+      properties:
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        label:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+        reasons:
+          type: array
+          items:
+            type: string
+    ImportWarning:
+      type: object
+      required:
+        - severity
+        - field
+        - message
+        - nextStep
+      properties:
+        severity:
+          type: string
+        field:
+          type: string
+        message:
+          type: string
+        nextStep:
+          type: string
+    Attachment:
+      type: object
+      required:
+        - fileName
+        - contentType
+        - sizeBytes
+      properties:
+        fileName:
+          type: string
+        contentType:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+    CalendarEvent:
+      type: object
+      required:
+        - summary
+        - location
+        - start
+        - end
+      properties:
+        summary:
+          type: string
+        location:
+          type: string
+        start:
+          type: string
+        end:
+          type: string
+    Provenance:
+      type: object
+      required:
+        - sourceId
+        - sourceSha256
+        - parserVersion
+        - schemaVersion
+        - sizeBytes
+      properties:
+        sourceId:
+          type: string
+        sourceSha256:
+          type: string
+        parserVersion:
+          type: string
+        schemaVersion:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
     MessageListResponse:
       type: object
       required:
@@ -332,4 +451,11 @@ components:
       properties:
         error:
           type: string
-
+        kind:
+          type: string
+        what:
+          type: string
+        why:
+          type: string
+        nowWhat:
+          type: string
