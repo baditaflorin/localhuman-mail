@@ -66,3 +66,21 @@ At least these inputs are visibly mishandled today: #4 HTML-only email, #6 calen
 - No new user-facing product surface beyond making the existing import, list, search, and draft flows smarter.
 - No Phase 3 polish work until the fixture pass rate and failure honesty improve.
 
+## After Phase 2 Substance
+
+The 10 real-data fixtures are committed under `test/fixtures/realdata/` and enforced by `internal/mailbox/fixture_test.go`.
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| Useful import/classification pass rate | 2/10 | 10/10 |
+| Deterministic fixture output | untested | 10/10 |
+| Actionable oversize/corrupt input errors | partial | tested |
+| Confidence/warnings surfaced by parser/API | no | yes |
+
+Closed gaps:
+
+1. Plaintext-only parsing now handles mbox envelopes, HTML fallback, non-UTF charsets, partial MIME recovery, attachments, calendars, and quoted reply trimming.
+2. Message shape inference now identifies personal replies, mailing lists, notifications, newsletters, attachment-only messages, receipts, calendars, and unknowns with confidence.
+3. Parser output now carries per-field confidence, warnings, provenance, source hashes, schema version, parser version, attachment metadata, and calendar metadata.
+4. SQLite storage and OpenAPI now preserve the richer message model instead of dropping it after parse.
+5. Fixture tests prevent silent regressions on the 10 real inputs.
