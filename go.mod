@@ -10,7 +10,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/net v0.43.0
+	golang.org/x/net v0.45.0
 	modernc.org/sqlite v1.40.1
 )
 
