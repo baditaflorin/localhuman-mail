@@ -1,22 +1,4 @@
 {
-  "name": "localhuman-mail-frontend",
-  "version": "0.3.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "prebuild": "node scripts/clean-pages.mjs",
-    "build": "tsc -b && vite build && node scripts/write-spa-fallback.mjs",
-    "typecheck": "tsc -b",
-    "preview": "vite preview --host 0.0.0.0",
-    "generate:api": "openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts",
-    "test": "vitest run --config vitest.config.ts",
-    "test:watch": "vitest --config vitest.config.ts",
-    "e2e": "playwright test",
-    "lint": "eslint .",
-    "fmt": "prettier --write .",
-    "fmt:check": "prettier --check ."
-  },
   "dependencies": {
     "@tanstack/react-query": "^5.90.7",
     "lucide-react": "^0.468.0",
@@ -44,6 +26,25 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.9.3",
     "vite": "^6.0.7",
-    "vitest": "^2.1.8"
-  }
+    "vitest": "4.1.0"
+  },
+  "name": "localhuman-mail-frontend",
+  "overrides": {},
+  "private": true,
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "prebuild": "node scripts/clean-pages.mjs",
+    "build": "tsc -b \u0026\u0026 vite build \u0026\u0026 node scripts/write-spa-fallback.mjs",
+    "typecheck": "tsc -b",
+    "preview": "vite preview --host 0.0.0.0",
+    "generate:api": "openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "e2e": "playwright test",
+    "lint": "eslint .",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check ."
+  },
+  "type": "module",
+  "version": "0.3.0"
 }
