@@ -296,7 +296,13 @@ func readPartText(reader io.Reader) (string, error) {
 }
 
 func countPart(reader io.Reader) (int64, error) {
-	return io.Copy(io.Discard, io.LimitReader(reader, MaxIndexedBytes+1))
+	// Attachment bytes are never retained (only metadata is stored), and the
+	// overall message is already bounded to MaxEMLBytes by readBounded, so it
+	// is safe to stream and discard the full part here without an additional
+	// per-part cap. Capping this count (as a prior version did, reusing
+	// MaxIndexedBytes) silently reported the wrong size for any attachment
+	// larger than the indexed-text limit.
+	return io.Copy(io.Discard, reader)
 }
 
 func chooseBody(candidates []bodyCandidate) (string, string) {
